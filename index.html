@@ -231,6 +231,9 @@ input.si:read-only{opacity:.5;cursor:default}
 <!-- PICKS -->
 <div class="page" id="page-picks">
 <div class="wrap">
+  <div id="picks-locked-banner" style="display:none;background:#c0392b;color:#fff;padding:14px 20px;border-radius:10px;margin-bottom:16px;font-weight:600;font-size:.95rem;text-align:center">
+    🔒 Picks are locked — the tournament has started. You can view your picks but cannot submit changes.
+  </div>
   <div style="padding:28px 0 16px">
     <h2 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:2px;color:var(--gold)">Submit Your Picks</h2>
     <p style="color:var(--muted2);margin-top:4px">Group standings auto-calculate from your scores. Bracket auto-populates each round.</p>
@@ -369,6 +372,8 @@ input.si:read-only{opacity:.5;cursor:default}
           <button class="btn btn-ghost" onclick="showSettingsTab()">⚙️ Pool Settings</button>
           <hr style="border-color:var(--border)">
           <button class="btn btn-danger" onclick="resetPool()">⚠️ Reset entire pool</button>
+          <hr style="border-color:var(--border)">
+          <button class="btn btn-ghost" onclick="loadSeedData()" style="border-color:#f39c12;color:#f39c12">🧪 Load Test Data (sanity check)</button>
         </div>
       </div>
     </div><!-- /stab-data -->
@@ -582,6 +587,7 @@ function loadCFG(){
   if(!CFG.binId) CFG.binId='6a1b7966ddf5aa59f77a03f3';
   if(!CFG.poolName) CFG.poolName='WC 2026 Pool';
   if(!CFG.pin) CFG.pin='2026';
+  if(CFG.locked === undefined) CFG.locked = false;
 }
 function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
 
@@ -616,6 +622,8 @@ async function init(){
   loadCFG();
   buildChips();
   renderStepInd();
+  // Restore admin session if previously unlocked this tab session
+  if(sessionStorage.getItem('wc2026admin')==='true' && CFG) adminOK = true;
   if(CFG){
     try{ await cloudLoad(); }catch(e){ console.warn('Cloud load failed:', e.message); }
     renderLeaderboard();
@@ -1091,6 +1099,10 @@ function renderReview(){
 
 async function submitPicks(){
   if(!CFG){ alert('Pool not connected to JSONBin. Ask the admin to complete setup.'); return; }
+  if(CFG.locked){ 
+    document.getElementById('submit-status').innerHTML = '<div class="alert a-err">🔒 The admin has locked picks — the tournament has started. Contact the admin if you need to make changes.</div>';
+    return;
+  }
   const name = document.getElementById('pick-name')?.value?.trim();
   if(!name) return;
   const btn = document.getElementById('submit-btn');
@@ -1353,6 +1365,7 @@ function checkPin(){
   const pin = document.getElementById('admin-pin').value;
   if(pin === CFG.pin){
     adminOK = true;
+    sessionStorage.setItem('wc2026admin','true');
     document.getElementById('admin-gate').style.display  = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     buildAdmGrid();
@@ -1364,6 +1377,7 @@ function checkPin(){
 
 function lockAdmin(){
   adminOK = false;
+  sessionStorage.removeItem('wc2026admin');
   document.getElementById('admin-gate').style.display  = 'block';
   document.getElementById('admin-panel').style.display = 'none';
   document.getElementById('admin-pin').value = '';
@@ -1377,7 +1391,7 @@ function showStab(id, el){
   if(el) el.classList.add('on');
   if(id==='ppl')      renderParticipants();
   if(id==='ko')       buildAdmKOGrid();
-  if(id==='settings') populateCfgForm();
+  if(id==='settings') { populateCfgForm(); renderLockToggle(); }
 }
 
 function showSettingsTab(){
@@ -1398,7 +1412,42 @@ function populateCfgForm(){
   set('cfg-pin',      CFG.pin);
 }
 
-async function saveSettings(){
+async function loadSeedData(){
+  if(!confirm('Load test data? This overwrites all current data with a full seeded tournament for sanity-checking.')) return;
+  const seed = JSON.parse(`{"participants": [{"name": "Perfect Pete", "submittedAt": "2026-06-11T12:00:00.000Z", "picks": {"groupScores": {"1": {"h": "2", "a": "0"}, "2": {"h": "2", "a": "0"}, "25": {"h": "1", "a": "2"}, "28": {"h": "2", "a": "1"}, "53": {"h": "1", "a": "2"}, "54": {"h": "1", "a": "2"}, "3": {"h": "3", "a": "0"}, "8": {"h": "0", "a": "2"}, "26": {"h": "2", "a": "1"}, "27": {"h": "2", "a": "0"}, "51": {"h": "1", "a": "2"}, "52": {"h": "1", "a": "0"}, "5": {"h": "0", "a": "1"}, "7": {"h": "3", "a": "1"}, "29": {"h": "4", "a": "0"}, "30": {"h": "1", "a": "1"}, "49": {"h": "0", "a": "2"}, "50": {"h": "3", "a": "0"}, "4": {"h": "2", "a": "1"}, "6": {"h": "0", "a": "2"}, "31": {"h": "3", "a": "0"}, "32": {"h": "1", "a": "2"}, "59": {"h": "0", "a": "1"}, "60": {"h": "2", "a": "0"}, "9": {"h": "2", "a": "0"}, "10": {"h": "4", "a": "0"}, "33": {"h": "3", "a": "1"}, "34": {"h": "3", "a": "0"}, "55": {"h": "0", "a": "2"}, "56": {"h": "1", "a": "3"}, "15": {"h": "1", "a": "0"}, "16": {"h": "3", "a": "1"}, "39": {"h": "2", "a": "0"}, "40": {"h": "0", "a": "2"}, "63": {"h": "2", "a": "0"}, "64": {"h": "0", "a": "2"}, "17": {"h": "2", "a": "0"}, "18": {"h": "0", "a": "2"}, "41": {"h": "2", "a": "1"}, "42": {"h": "3", "a": "0"}, "61": {"h": "1", "a": "2"}, "62": {"h": "2", "a": "0"}, "13": {"h": "0", "a": "2"}, "14": {"h": "3", "a": "0"}, "37": {"h": "2", "a": "0"}, "38": {"h": "2", "a": "1"}, "65": {"h": "1", "a": "1"}, "66": {"h": "1", "a": "2"}, "19": {"h": "3", "a": "0"}, "20": {"h": "2", "a": "0"}, "43": {"h": "2", "a": "1"}, "44": {"h": "0", "a": "2"}, "69": {"h": "2", "a": "0"}, "70": {"h": "0", "a": "3"}, "23": {"h": "3", "a": "0"}, "24": {"h": "0", "a": "2"}, "47": {"h": "2", "a": "0"}, "48": {"h": "2", "a": "0"}, "71": {"h": "1", "a": "2"}, "72": {"h": "1", "a": "0"}, "21": {"h": "2", "a": "0"}, "22": {"h": "2", "a": "1"}, "45": {"h": "3", "a": "1"}, "46": {"h": "0", "a": "2"}, "67": {"h": "0", "a": "2"}, "68": {"h": "2", "a": "0"}, "11": {"h": "3", "a": "0"}, "12": {"h": "2", "a": "1"}, "35": {"h": "2", "a": "1"}, "36": {"h": "0", "a": "2"}, "57": {"h": "1", "a": "2"}, "58": {"h": "0", "a": "3"}}, "knockout": {"m73": {"winner": "Korea Republic", "h": "2", "a": "1"}, "m74": {"winner": "Germany", "h": "3", "a": "0"}, "m75": {"winner": "Belgium", "h": "2", "a": "1"}, "m76": {"winner": "Brazil", "h": "2", "a": "0"}, "m77": {"winner": "Argentina", "h": "2", "a": "0"}, "m78": {"winner": "Algeria", "h": "1", "a": "2"}, "m79": {"winner": "Mexico", "h": "3", "a": "0"}, "m80": {"winner": "Netherlands", "h": "2", "a": "0"}, "m81": {"winner": "United States", "h": "2", "a": "0"}, "m82": {"winner": "France", "h": "3", "a": "1"}, "m83": {"winner": "Croatia", "h": "1", "a": "0"}, "m84": {"winner": "Spain", "h": "2", "a": "1"}, "m85": {"winner": "Canada", "h": "2", "a": "0"}, "m86": {"winner": "Portugal", "h": "2", "a": "0"}, "m87": {"winner": "England", "h": "3", "a": "0"}, "m88": {"winner": "Paraguay", "h": "2", "a": "1"}, "m89": {"winner": "Germany", "h": "2", "a": "1"}, "m90": {"winner": "Korea Republic", "h": "2", "a": "1"}, "m91": {"winner": "Brazil", "h": "3", "a": "0"}, "m92": {"winner": "Mexico", "h": "2", "a": "1"}, "m93": {"winner": "Spain", "h": "1", "a": "2"}, "m94": {"winner": "United States", "h": "2", "a": "1"}, "m95": {"winner": "Portugal", "h": "3", "a": "0"}, "m96": {"winner": "England", "h": "1", "a": "2"}, "m97": {"winner": "Germany", "h": "3", "a": "1"}, "m98": {"winner": "United States", "h": "1", "a": "2"}, "m99": {"winner": "Brazil", "h": "2", "a": "1"}, "m100": {"winner": "Portugal", "h": "2", "a": "1"}, "m101": {"winner": "Germany", "h": "2", "a": "1"}, "m102": {"winner": "Brazil", "h": "2", "a": "0"}, "m103": {"winner": "United States", "h": "2", "a": "1"}, "m104": {"winner": "Brazil", "loser": "Germany", "h": "1", "a": "2"}}}}, {"name": "Wrong Wayne", "submittedAt": "2026-06-11T12:01:00.000Z", "picks": {"groupScores": {"1": {"h": "0", "a": "2"}, "2": {"h": "0", "a": "2"}, "25": {"h": "2", "a": "1"}, "28": {"h": "1", "a": "2"}, "53": {"h": "2", "a": "1"}, "54": {"h": "2", "a": "1"}, "3": {"h": "0", "a": "3"}, "8": {"h": "2", "a": "0"}, "26": {"h": "1", "a": "2"}, "27": {"h": "0", "a": "2"}, "51": {"h": "2", "a": "1"}, "52": {"h": "0", "a": "1"}, "5": {"h": "1", "a": "0"}, "7": {"h": "1", "a": "3"}, "29": {"h": "0", "a": "4"}, "30": {"h": "1", "a": "1"}, "49": {"h": "2", "a": "0"}, "50": {"h": "0", "a": "3"}, "4": {"h": "1", "a": "2"}, "6": {"h": "2", "a": "0"}, "31": {"h": "0", "a": "3"}, "32": {"h": "2", "a": "1"}, "59": {"h": "1", "a": "0"}, "60": {"h": "0", "a": "2"}, "9": {"h": "0", "a": "2"}, "10": {"h": "0", "a": "4"}, "33": {"h": "1", "a": "3"}, "34": {"h": "0", "a": "3"}, "55": {"h": "2", "a": "0"}, "56": {"h": "3", "a": "1"}, "15": {"h": "0", "a": "1"}, "16": {"h": "1", "a": "3"}, "39": {"h": "0", "a": "2"}, "40": {"h": "2", "a": "0"}, "63": {"h": "0", "a": "2"}, "64": {"h": "2", "a": "0"}, "17": {"h": "0", "a": "2"}, "18": {"h": "2", "a": "0"}, "41": {"h": "1", "a": "2"}, "42": {"h": "0", "a": "3"}, "61": {"h": "2", "a": "1"}, "62": {"h": "0", "a": "2"}, "13": {"h": "2", "a": "0"}, "14": {"h": "0", "a": "3"}, "37": {"h": "0", "a": "2"}, "38": {"h": "1", "a": "2"}, "65": {"h": "1", "a": "1"}, "66": {"h": "2", "a": "1"}, "19": {"h": "0", "a": "3"}, "20": {"h": "0", "a": "2"}, "43": {"h": "1", "a": "2"}, "44": {"h": "2", "a": "0"}, "69": {"h": "0", "a": "2"}, "70": {"h": "3", "a": "0"}, "23": {"h": "0", "a": "3"}, "24": {"h": "2", "a": "0"}, "47": {"h": "0", "a": "2"}, "48": {"h": "0", "a": "2"}, "71": {"h": "2", "a": "1"}, "72": {"h": "0", "a": "1"}, "21": {"h": "0", "a": "2"}, "22": {"h": "1", "a": "2"}, "45": {"h": "1", "a": "3"}, "46": {"h": "2", "a": "0"}, "67": {"h": "2", "a": "0"}, "68": {"h": "0", "a": "2"}, "11": {"h": "0", "a": "3"}, "12": {"h": "1", "a": "2"}, "35": {"h": "1", "a": "2"}, "36": {"h": "2", "a": "0"}, "57": {"h": "2", "a": "1"}, "58": {"h": "3", "a": "0"}}, "knockout": {"m73": {"winner": "Switzerland", "h": "0", "a": "0"}, "m74": {"winner": "Scotland", "h": "0", "a": "0"}, "m75": {"winner": "Morocco", "h": "0", "a": "0"}, "m76": {"winner": "Egypt", "h": "0", "a": "0"}, "m77": {"winner": "Turkey", "h": "0", "a": "0"}, "m78": {"winner": "Ivory Coast", "h": "0", "a": "0"}, "m79": {"winner": "Ecuador", "h": "0", "a": "0"}, "m80": {"winner": "Ghana", "h": "0", "a": "0"}, "m81": {"winner": "Austria", "h": "0", "a": "0"}, "m82": {"winner": "South Africa", "h": "0", "a": "0"}, "m83": {"winner": "Sweden", "h": "0", "a": "0"}, "m84": {"winner": "Colombia", "h": "0", "a": "0"}, "m85": {"winner": "Senegal", "h": "0", "a": "0"}, "m86": {"winner": "Uruguay", "h": "0", "a": "0"}, "m87": {"winner": "Japan", "h": "0", "a": "0"}, "m88": {"winner": "Norway", "h": "0", "a": "0"}, "m89": {"winner": "Argentina", "h": "0", "a": "0"}, "m90": {"winner": "Belgium", "h": "0", "a": "0"}, "m91": {"winner": "Algeria", "h": "0", "a": "0"}, "m92": {"winner": "Netherlands", "h": "0", "a": "0"}, "m93": {"winner": "Croatia", "h": "0", "a": "0"}, "m94": {"winner": "France", "h": "0", "a": "0"}, "m95": {"winner": "Paraguay", "h": "0", "a": "0"}, "m96": {"winner": "Canada", "h": "0", "a": "0"}, "m97": {"winner": "Korea Republic", "h": "0", "a": "0"}, "m98": {"winner": "Spain", "h": "0", "a": "0"}, "m99": {"winner": "Mexico", "h": "0", "a": "0"}, "m100": {"winner": "England", "h": "0", "a": "0"}, "m101": {"winner": "United States", "h": "0", "a": "0"}, "m102": {"winner": "Portugal", "h": "0", "a": "0"}, "m103": {"winner": "Portugal", "h": "0", "a": "0"}, "m104": {"winner": "Germany", "loser": "Brazil", "h": "0", "a": "0"}}}}], "actualResults": {"groupScores": {"1": {"h": "2", "a": "0"}, "2": {"h": "2", "a": "0"}, "25": {"h": "1", "a": "2"}, "28": {"h": "2", "a": "1"}, "53": {"h": "1", "a": "2"}, "54": {"h": "1", "a": "2"}, "3": {"h": "3", "a": "0"}, "8": {"h": "0", "a": "2"}, "26": {"h": "2", "a": "1"}, "27": {"h": "2", "a": "0"}, "51": {"h": "1", "a": "2"}, "52": {"h": "1", "a": "0"}, "5": {"h": "0", "a": "1"}, "7": {"h": "3", "a": "1"}, "29": {"h": "4", "a": "0"}, "30": {"h": "1", "a": "1"}, "49": {"h": "0", "a": "2"}, "50": {"h": "3", "a": "0"}, "4": {"h": "2", "a": "1"}, "6": {"h": "0", "a": "2"}, "31": {"h": "3", "a": "0"}, "32": {"h": "1", "a": "2"}, "59": {"h": "0", "a": "1"}, "60": {"h": "2", "a": "0"}, "9": {"h": "2", "a": "0"}, "10": {"h": "4", "a": "0"}, "33": {"h": "3", "a": "1"}, "34": {"h": "3", "a": "0"}, "55": {"h": "0", "a": "2"}, "56": {"h": "1", "a": "3"}, "15": {"h": "1", "a": "0"}, "16": {"h": "3", "a": "1"}, "39": {"h": "2", "a": "0"}, "40": {"h": "0", "a": "2"}, "63": {"h": "2", "a": "0"}, "64": {"h": "0", "a": "2"}, "17": {"h": "2", "a": "0"}, "18": {"h": "0", "a": "2"}, "41": {"h": "2", "a": "1"}, "42": {"h": "3", "a": "0"}, "61": {"h": "1", "a": "2"}, "62": {"h": "2", "a": "0"}, "13": {"h": "0", "a": "2"}, "14": {"h": "3", "a": "0"}, "37": {"h": "2", "a": "0"}, "38": {"h": "2", "a": "1"}, "65": {"h": "1", "a": "1"}, "66": {"h": "1", "a": "2"}, "19": {"h": "3", "a": "0"}, "20": {"h": "2", "a": "0"}, "43": {"h": "2", "a": "1"}, "44": {"h": "0", "a": "2"}, "69": {"h": "2", "a": "0"}, "70": {"h": "0", "a": "3"}, "23": {"h": "3", "a": "0"}, "24": {"h": "0", "a": "2"}, "47": {"h": "2", "a": "0"}, "48": {"h": "2", "a": "0"}, "71": {"h": "1", "a": "2"}, "72": {"h": "1", "a": "0"}, "21": {"h": "2", "a": "0"}, "22": {"h": "2", "a": "1"}, "45": {"h": "3", "a": "1"}, "46": {"h": "0", "a": "2"}, "67": {"h": "0", "a": "2"}, "68": {"h": "2", "a": "0"}, "11": {"h": "3", "a": "0"}, "12": {"h": "2", "a": "1"}, "35": {"h": "2", "a": "1"}, "36": {"h": "0", "a": "2"}, "57": {"h": "1", "a": "2"}, "58": {"h": "0", "a": "3"}}, "knockout": {"m73": {"h": "2", "a": "1", "winner": "Korea Republic", "loser": "Switzerland"}, "m74": {"h": "3", "a": "0", "winner": "Germany", "loser": "Scotland"}, "m75": {"h": "2", "a": "1", "winner": "Belgium", "loser": "Morocco"}, "m76": {"h": "2", "a": "0", "winner": "Brazil", "loser": "Egypt"}, "m77": {"h": "2", "a": "0", "winner": "Argentina", "loser": "Turkey"}, "m78": {"h": "1", "a": "2", "winner": "Algeria", "loser": "Ivory Coast"}, "m79": {"h": "3", "a": "0", "winner": "Mexico", "loser": "Ecuador"}, "m80": {"h": "2", "a": "0", "winner": "Netherlands", "loser": "Ghana"}, "m81": {"h": "2", "a": "0", "winner": "United States", "loser": "Austria"}, "m82": {"h": "3", "a": "1", "winner": "France", "loser": "South Africa"}, "m83": {"h": "1", "a": "0", "winner": "Croatia", "loser": "Sweden"}, "m84": {"h": "2", "a": "1", "winner": "Spain", "loser": "Colombia"}, "m85": {"h": "2", "a": "0", "winner": "Canada", "loser": "Senegal"}, "m86": {"h": "2", "a": "0", "winner": "Portugal", "loser": "Uruguay"}, "m87": {"h": "3", "a": "0", "winner": "England", "loser": "Japan"}, "m88": {"h": "2", "a": "1", "winner": "Paraguay", "loser": "Norway"}, "m89": {"h": "2", "a": "1", "winner": "Germany", "loser": "Argentina"}, "m90": {"h": "2", "a": "1", "winner": "Korea Republic", "loser": "Belgium"}, "m91": {"h": "3", "a": "0", "winner": "Brazil", "loser": "Algeria"}, "m92": {"h": "2", "a": "1", "winner": "Mexico", "loser": "Netherlands"}, "m93": {"h": "1", "a": "2", "winner": "Spain", "loser": "Croatia"}, "m94": {"h": "2", "a": "1", "winner": "United States", "loser": "France"}, "m95": {"h": "3", "a": "0", "winner": "Portugal", "loser": "Paraguay"}, "m96": {"h": "1", "a": "2", "winner": "England", "loser": "Canada"}, "m97": {"h": "3", "a": "1", "winner": "Germany", "loser": "Korea Republic"}, "m98": {"h": "1", "a": "2", "winner": "United States", "loser": "Spain"}, "m99": {"h": "2", "a": "1", "winner": "Brazil", "loser": "Mexico"}, "m100": {"h": "2", "a": "1", "winner": "Portugal", "loser": "England"}, "m101": {"h": "2", "a": "1", "winner": "Germany", "loser": "United States"}, "m102": {"h": "2", "a": "0", "winner": "Brazil", "loser": "Portugal"}, "m103": {"h": "2", "a": "1", "winner": "United States", "loser": "Portugal"}, "m104": {"h": "1", "a": "2", "winner": "Brazil", "loser": "Germany"}}, "koWinners": {"m73": "Korea Republic", "m74": "Germany", "m75": "Belgium", "m76": "Brazil", "m77": "Argentina", "m78": "Algeria", "m79": "Mexico", "m80": "Netherlands", "m81": "United States", "m82": "France", "m83": "Croatia", "m84": "Spain", "m85": "Canada", "m86": "Portugal", "m87": "England", "m88": "Paraguay", "m89": "Germany", "m90": "Korea Republic", "m91": "Brazil", "m92": "Mexico", "m93": "Spain", "m94": "United States", "m95": "Portugal", "m96": "England", "m97": "Germany", "m98": "United States", "m99": "Brazil", "m100": "Portugal", "m101": "Germany", "m102": "Brazil", "m103": "United States", "m104": "Brazil", "m104_L": "Germany", "m103_L": "Portugal"}}}`);
+  POOL = seed;
+  cloudSave().then(() => {
+    renderLeaderboard();
+    buildAdmGrid();
+    alert('✅ Test data loaded!\n\nPerfect Pete should score 453 pts.\nChampion: Brazil | Runner-up: Germany | 3rd: USA');
+  }).catch(e => alert('Save failed: ' + e.message));
+}
+
+function toggleLock(){
+  if(!CFG) return;
+  CFG.locked = !CFG.locked;
+  saveCFG();
+  renderLockToggle();
+  const msg = CFG.locked ? '🔒 Picks are now LOCKED. Participants cannot submit.' : '🔓 Picks are now OPEN. Participants can submit.';
+  alert(msg);
+}
+
+function renderLockToggle(){
+  const btn = document.getElementById('lock-toggle-btn');
+  const status = document.getElementById('lock-status-text');
+  if(!CFG) return;
+  if(btn){
+    btn.textContent = CFG.locked ? '🔓 Unlock Picks' : '🔒 Lock Picks';
+    btn.className   = CFG.locked ? 'btn btn-ghost'   : 'btn btn-danger';
+  }
+  if(status){
+    status.innerHTML = CFG.locked
+      ? '<span style="color:#e74c3c;font-weight:700">🔒 LOCKED — participants cannot submit picks</span>'
+      : '<span style="color:#2ecc71;font-weight:700">🔓 OPEN — participants can submit picks</span>';
+  }
+}
+
+function saveSettings(){
   const get = id => (document.getElementById(id)||{}).value?.trim()||'';
   const apiKey   = get('cfg-apikey');
   const binId    = get('cfg-binid');
