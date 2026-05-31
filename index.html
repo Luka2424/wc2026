@@ -575,10 +575,11 @@ function emptyPS(){
 
 function loadCFG(){
   try{ CFG=JSON.parse(localStorage.getItem('wc2026cfg')); }catch(e){}
-  // Pre-fill binId if not already configured
+  // Pre-fill defaults if not already configured
   if(!CFG) CFG={};
   if(!CFG.binId) CFG.binId='6a1b7966ddf5aa59f77a03f3';
   if(!CFG.poolName) CFG.poolName='WC 2026 Pool';
+  if(!CFG.pin) CFG.pin='2026';
 }
 function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
 
