@@ -589,7 +589,7 @@ function loadCFG(){
   if(!CFG.pin) CFG.pin='2026';
   if(CFG.locked === undefined) CFG.locked = false;
 }
-function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
+async function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
 
 // ═══════════════════════════════════════════
 // JSONBIN
@@ -1447,7 +1447,7 @@ function renderLockToggle(){
   }
 }
 
-function saveSettings(){
+async function saveSettings(){
   const get = id => (document.getElementById(id)||{}).value?.trim()||'';
   const apiKey   = get('cfg-apikey');
   const binId    = get('cfg-binid');
@@ -1680,7 +1680,7 @@ async function doSync(){
   if(sp) sp.style.display = 'none';
 }
 
-function exportJSON(){
+async function exportJSON(){
   const b = new Blob([JSON.stringify(POOL,null,2)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
