@@ -584,9 +584,10 @@ function loadCFG(){
   try{ CFG=JSON.parse(localStorage.getItem('wc2026cfg')); }catch(e){}
   // Pre-fill defaults if not already configured
   if(!CFG) CFG={};
-  if(!CFG.binId) CFG.binId='6a1b7966ddf5aa59f77a03f3';
+  if(!CFG.binId)    CFG.binId='6a1b7966ddf5aa59f77a03f3';
+  if(!CFG.apiKey)   CFG.apiKey='__JSONBIN_API_KEY__';
   if(!CFG.poolName) CFG.poolName='WC 2026 Pool';
-  if(!CFG.pin) CFG.pin='2026';
+  if(!CFG.pin)      CFG.pin='__ADMIN_PIN__';
   if(CFG.locked === undefined) CFG.locked = false;
 }
 async function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
