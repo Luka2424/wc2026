@@ -800,6 +800,11 @@ function buildGroupMatchInputs(){
 }
 
 function onGS(mid){
+  // Clamp negatives to 0
+  ['ph','pa'].forEach(pfx => {
+    const el = document.getElementById(pfx+'-'+mid);
+    if(el && el.value !== '' && parseInt(el.value) < 0) el.value = 0;
+  });
   const key = String(mid);
   const h = (document.getElementById('ph-'+mid)||{}).value ?? '';
   const a = (document.getElementById('pa-'+mid)||{}).value ?? '';
