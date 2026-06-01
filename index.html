@@ -703,8 +703,7 @@ function allStandings(scores){
 function best3rds(allSt){
   return GK.map(g => { const st=allSt[g]; return st&&st[2] ? {...st[2], group:g} : null; })
     .filter(Boolean)
-    .sort((a,b) => b.pts!==a.pts ? b.pts-a.pts : b.gd!==a.gd ? b.gd-a.gd : b.gf-a.gf)
-    .slice(0,8).map(t => t.team);
+    .sort((a,b) => b.pts!==a.pts ? b.pts-a.pts : b.gd!==a.gd ? b.gd-a.gd : b.gf-a.gf);
 }
 
 // ── FIFA 2026 Official 3rd-place lookup (Annex C – all 495 combinations) ──
@@ -1239,6 +1238,17 @@ function calcScore(p){
   if(actFW && prdFin.winner===actFW) ko += 15;
   if(actFL && prdFin.loser===actFL)  ko += 10;
   if(actFW && actFL && prdFin.winner===actFW && prdFin.loser===actFL) ko += 5;
+  // Score bonus on the final (same as other KO matches)
+  if(actFW && prdFin.winner===actFW){
+    const aF = aKO['m104'], pF = pKO['m104'];
+    if(aF && pF && pF.h!=null && pF.a!=null){
+      const ah=parseInt(aF.h),aa=parseInt(aF.a),ph=parseInt(pF.h),pa=parseInt(pF.a);
+      if(![ah,aa,ph,pa].some(isNaN) && ph!==pa){
+        if(ph===ah && pa===aa) ko += 3;
+        else if((ph-pa)===(ah-aa)) ko += 2;
+      }
+    }
+  }
 
   return {grp, stand, ko, total: grp+stand+ko};
 }
