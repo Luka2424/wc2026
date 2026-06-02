@@ -19,8 +19,19 @@ jobs:
           JSONBIN_API_KEY: ${{ secrets.JSONBIN_API_KEY }}
           ADMIN_PIN: ${{ secrets.ADMIN_PIN }}
         run: |
-          sed -i "s|__JSONBIN_API_KEY__|${JSONBIN_API_KEY}|g" index.html
-          sed -i "s|__ADMIN_PIN__|${ADMIN_PIN}|g" index.html
+          python3 -c "
+import os, re
+key = os.environ['JSONBIN_API_KEY']
+pin = os.environ['ADMIN_PIN']
+with open('index.html', 'r') as f:
+    content = f.read()
+content = content.replace('__JSONBIN_API_KEY__', key)
+content = content.replace('__ADMIN_PIN__', pin)
+with open('index.html', 'w') as f:
+    f.write(content)
+print('Injected key prefix:', key[:8])
+print('Injected pin length:', len(pin))
+"
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
