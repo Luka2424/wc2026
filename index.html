@@ -833,7 +833,7 @@ function renderStandingsPreview(){
         <thead><tr><th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th></tr></thead>
         <tbody>`;
     rows.forEach((r,i) => {
-      const q = i<2, t = i===2 && b3.includes(r.team);
+      const q = i<2, t = i===2 && b3.slice(0,8).some(x => x.team === r.team);
       html += `<tr class="${q?'q':t?'t3':''}">
         <td>${r.team}${q?'<span class="bq">Q</span>':t?'<span class="b3">3</span>':''}</td>
         <td>${r.mp}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>
