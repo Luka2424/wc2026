@@ -372,6 +372,8 @@ input.si:read-only{opacity:.5;cursor:default}
         <div class="card-title">💾 Data</div>
         <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
           <button class="btn btn-ghost" onclick="exportJSON()">📥 Export backup JSON</button>
+          <button class="btn btn-ghost" onclick="importJSON()" style="border-color:#3498db;color:#3498db">📤 Import backup JSON</button>
+          <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImport(this)">
           <button class="btn btn-ghost" onclick="showSettingsTab()">⚙️ Pool Settings</button>
           <hr style="border-color:var(--border)">
           <button class="btn btn-danger" onclick="resetPool()">⚠️ Reset entire pool</button>
@@ -1733,6 +1735,46 @@ async function doSync(){
     renderParticipants();
   } catch(e){ alert('Sync failed: '+e.message); }
   if(sp) sp.style.display = 'none';
+}
+
+function importJSON(){
+  document.getElementById('import-file-input').click();
+}
+
+function handleImport(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      // Validate it looks like a pool backup
+      if(!Array.isArray(data.participants) || !data.actualResults){
+        alert('⚠️ Invalid backup file — does not look like a WC 2026 Pool export.');
+        return;
+      }
+      const count = data.participants.length;
+      if(!confirm(`Import backup?\n\n${count} participant(s) found.\n\nThis will OVERWRITE all current data in JSONBin.`)){
+        input.value = '';
+        return;
+      }
+      POOL = data;
+      cloudSave().then(() => {
+        renderLeaderboard();
+        buildAdmGrid();
+        renderParticipants();
+        input.value = '';
+        alert(`✅ Imported successfully!\n${count} participant(s) restored.`);
+      }).catch(err => {
+        alert('❌ Import failed: ' + err.message);
+        input.value = '';
+      });
+    } catch(err){
+      alert('❌ Could not parse file: ' + err.message);
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
 }
 
 async function exportJSON(){
