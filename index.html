@@ -581,14 +581,19 @@ function emptyPS(){
   return {gs:{}, koW:{}, koS:{}};
 }
 
+// Baked-in defaults — injected by GitHub Actions at deploy time
+const BAKED_BIN_ID  = '6a1b7966ddf5aa59f77a03f3';
+const BAKED_API_KEY = '__JSONBIN_API_KEY__';
+const BAKED_PIN     = '__ADMIN_PIN__';
+
 function loadCFG(){
   try{ CFG=JSON.parse(localStorage.getItem('wc2026cfg')); }catch(e){}
-  // Pre-fill defaults if not already configured
   if(!CFG) CFG={};
-  if(!CFG.binId)    CFG.binId='6a1b7966ddf5aa59f77a03f3';
-  if(!CFG.apiKey)   CFG.apiKey='__JSONBIN_API_KEY__';
-  if(!CFG.poolName) CFG.poolName='WC 2026 Pool';
-  if(!CFG.pin)      CFG.pin='__ADMIN_PIN__';
+  // Always override with baked-in values — localStorage may be stale from before secrets were set
+  if(!CFG.binId || CFG.binId==='__JSONBIN_BIN_ID__') CFG.binId = BAKED_BIN_ID;
+  if(!CFG.apiKey || CFG.apiKey.includes('__'))        CFG.apiKey = BAKED_API_KEY;
+  if(!CFG.poolName) CFG.poolName = 'WC 2026 Pool';
+  if(!CFG.pin || CFG.pin.includes('__'))              CFG.pin = BAKED_PIN;
   if(CFG.locked === undefined) CFG.locked = false;
 }
 async function saveCFG(){ localStorage.setItem('wc2026cfg', JSON.stringify(CFG)); }
@@ -1279,6 +1284,9 @@ function calcScore(p){
 function renderLeaderboard(){
   const el = document.getElementById('lb-content');
   if(!el) return;
+  if(!POOL.participants || POOL.participants.length===0){
+    el.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px">⏳ Loading leaderboard...</p>';
+  }
   const mc = Object.keys((POOL.actualResults||{}).groupScores||{}).length;
   const mcEl = document.getElementById('lb-match-count');
   if(mcEl) mcEl.textContent = mc;
