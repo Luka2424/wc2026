@@ -612,7 +612,8 @@ async function binCall(method, body){
 }
 async function cloudLoad(){
   const d = await binCall('GET');
-  POOL = d.record || emptyPool();
+  // X-Bin-Meta:false returns raw JSON, not wrapped in {record:...}
+  POOL = d.record || d || emptyPool();
   // Ensure all sub-objects exist
   if(!POOL.actualResults) POOL.actualResults = {};
   if(!POOL.actualResults.groupScores) POOL.actualResults.groupScores = {};
