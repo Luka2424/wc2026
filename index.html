@@ -659,6 +659,9 @@ function goPage(id){
   if(id === 'results') renderResults();
   if(id === 'picks'){
     buildGroupMatchInputs();
+    // Show/hide lock banner
+    const lb = document.getElementById('picks-locked-banner');
+    if(lb) lb.style.display = (CFG && CFG.locked) ? 'block' : 'none';
     // Show the current step, hide the rest
     for(let i=0;i<5;i++){
       const el = document.getElementById('pick-step-'+i);
