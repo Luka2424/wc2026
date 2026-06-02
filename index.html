@@ -333,7 +333,9 @@ input.si:read-only{opacity:.5;cursor:default}
   <div id="admin-panel" style="display:none">
     <div style="padding:28px 0 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
       <h2 style="font-family:'Bebas Neue';font-size:2rem;letter-spacing:2px;color:var(--gold)">Admin Panel</h2>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div id="admin-lock-status" style="font-size:.85rem;font-weight:600;padding:6px 12px;border-radius:6px"></div>
+        <button id="admin-lock-btn" class="btn btn-sm" onclick="toggleLock()" style="min-width:140px"></button>
         <button class="btn btn-ghost btn-sm" onclick="doSync()"><span class="spinner" id="sync-spin" style="display:none"></span>↻ Sync</button>
         <button class="btn btn-ghost btn-sm" onclick="lockAdmin()">🔒 Lock</button>
       </div>
@@ -631,7 +633,7 @@ async function init(){
   buildChips();
   renderStepInd();
   // Restore admin session if previously unlocked this tab session
-  if(sessionStorage.getItem('wc2026admin')==='true' && CFG) adminOK = true;
+  if(sessionStorage.getItem('wc2026admin')==='true' && CFG){ adminOK = true; setTimeout(renderLockToggle, 100); }
   if(CFG){
     try{ await cloudLoad(); }catch(e){ console.warn('Cloud load failed:', e.message); }
     renderLeaderboard();
@@ -1410,6 +1412,7 @@ function checkPin(){
     sessionStorage.setItem('wc2026admin','true');
     document.getElementById('admin-gate').style.display  = 'none';
     document.getElementById('admin-panel').style.display = 'block';
+    renderLockToggle();
     buildAdmGrid();
     renderParticipants();
   } else {
@@ -1475,19 +1478,29 @@ function toggleLock(){
 }
 
 function renderLockToggle(){
-  const btn = document.getElementById('lock-toggle-btn');
-  const status = document.getElementById('lock-status-text');
+  // Settings tab elements
+  const settingsBtn = document.getElementById('lock-toggle-btn');
+  const settingsStatus = document.getElementById('lock-status-text');
+  // Admin header elements
+  const headerBtn = document.getElementById('admin-lock-btn');
+  const headerStatus = document.getElementById('admin-lock-status');
+
   if(!CFG) return;
-  if(btn){
-    btn.textContent = CFG.locked ? '🔓 Unlock Picks' : '🔒 Lock Picks';
-    btn.className   = CFG.locked ? 'btn btn-ghost'   : 'btn btn-danger';
-  }
-  if(status){
-    status.innerHTML = CFG.locked
-      ? '<span style="color:#e74c3c;font-weight:700">🔒 LOCKED — participants cannot submit picks</span>'
-      : '<span style="color:#2ecc71;font-weight:700">🔓 OPEN — participants can submit picks</span>';
+
+  if(CFG.locked){
+    if(settingsBtn){ settingsBtn.textContent='🔓 Unlock Picks'; settingsBtn.className='btn btn-ghost'; }
+    if(settingsStatus) settingsStatus.innerHTML='<span style="color:#e74c3c;font-weight:700">🔒 LOCKED — participants cannot submit picks</span>';
+    if(headerBtn){ headerBtn.textContent='🔓 Unlock Picks'; headerBtn.style.cssText='background:#555;color:#fff;border:none;min-width:140px'; }
+    if(headerStatus){ headerStatus.textContent='🔒 PICKS LOCKED'; headerStatus.style.cssText='background:#c0392b;color:#fff;font-size:.85rem;font-weight:700;padding:6px 12px;border-radius:6px'; }
+  } else {
+    if(settingsBtn){ settingsBtn.textContent='🔒 Lock Picks'; settingsBtn.className='btn btn-danger'; }
+    if(settingsStatus) settingsStatus.innerHTML='<span style="color:#2ecc71;font-weight:700">🔓 OPEN — participants can submit picks</span>';
+    if(headerBtn){ headerBtn.textContent='🔒 Lock Picks'; headerBtn.style.cssText='background:#c0392b;color:#fff;border:none;min-width:140px'; }
+    if(headerStatus){ headerStatus.textContent='🔓 PICKS OPEN'; headerStatus.style.cssText='background:#27ae60;color:#fff;font-size:.85rem;font-weight:700;padding:6px 12px;border-radius:6px'; }
   }
 }
+
+// renderLockToggle defined above in toggleLock block
 
 async function saveSettings(){
   const get = id => (document.getElementById(id)||{}).value?.trim()||'';
