@@ -798,10 +798,10 @@ function buildGroupMatchInputs(){
           <span class="mc-team home">${m.h}</span>
           <div class="score-wrap">
             <input type="number" inputmode="numeric" min="0" max="20" class="si"
-              id="ph-${m.id}" value="${sv.h??''}" placeholder="0">
+              id="ph-${m.id}" value="${sv.h??''}" placeholder="0" onblur="fillEmptySide('ph-${m.id}','pa-${m.id}',${m.id})">
             <span class="sc-sep">:</span>
             <input type="number" inputmode="numeric" min="0" max="20" class="si"
-              id="pa-${m.id}" value="${sv.a??''}" placeholder="0">
+              id="pa-${m.id}" value="${sv.a??''}" placeholder="0" onblur="fillEmptySide('ph-${m.id}','pa-${m.id}',${m.id})">
           </div>
           <span class="mc-team">${m.a}</span>
         </div>
@@ -1564,10 +1564,10 @@ function buildAdmGrid(){
         <span class="mc-team home" style="font-size:.77rem">${m.h}</span>
         <div class="score-wrap">
           <input type="number" inputmode="numeric" min="0" max="20" class="si"
-            id="ah-${m.id}" value="${r.h??''}">
+            id="ah-${m.id}" value="${r.h??''}" onblur="fillEmptyAdmSide('ah-${m.id}','aa-${m.id}')">
           <span class="sc-sep">:</span>
           <input type="number" inputmode="numeric" min="0" max="20" class="si"
-            id="aa-${m.id}" value="${r.a??''}">
+            id="aa-${m.id}" value="${r.a??''}" onblur="fillEmptyAdmSide('ah-${m.id}','aa-${m.id}')">
         </div>
         <span class="mc-team" style="font-size:.77rem">${m.a}</span>
       </div>
@@ -1598,6 +1598,22 @@ async function saveGroupResults(){
 }
 
 // Admin knockout results
+// If one side of a score is filled and the other is empty, fill the empty side with 0
+function fillEmptySide(hId, aId, mid){
+  const hEl = document.getElementById(hId);
+  const aEl = document.getElementById(aId);
+  if(!hEl || !aEl) return;
+  const hVal = hEl.value.trim();
+  const aVal = aEl.value.trim();
+  if(hVal !== '' && aVal === ''){ aEl.value = '0'; if(mid) onGS(mid); }
+  if(aVal !== '' && hVal === ''){ hEl.value = '0'; if(mid) onGS(mid); }
+}
+
+// Same for admin inputs (no onGS callback needed — save button handles it)
+function fillEmptyAdmSide(hId, aId){
+  fillEmptySide(hId, aId, null);
+}
+
 function autoSelectKOWinner(mid){
   var h = parseInt(document.getElementById('akih-'+mid)?.value);
   var a = parseInt(document.getElementById('akia-'+mid)?.value);
@@ -1647,9 +1663,9 @@ function buildAdmKOGrid(){
         <div class="ko-matchup">
           <span class="ko-team home${!T1?' tbd':''}">${T1||'TBD'}</span>
           <div class="score-wrap">
-            <input type="number" inputmode="numeric" class="si" id="akih-${m.id}" value="${sv.h??''}" oninput="autoSelectKOWinner('${m.id}')">
+            <input type="number" inputmode="numeric" class="si" id="akih-${m.id}" value="${sv.h??''}" oninput="autoSelectKOWinner('${m.id}')" onblur="fillEmptyAdmSide('akih-${m.id}','akia-${m.id}');autoSelectKOWinner('${m.id}')">
             <span class="sc-sep">:</span>
-            <input type="number" inputmode="numeric" class="si" id="akia-${m.id}" value="${sv.a??''}" oninput="autoSelectKOWinner('${m.id}')">
+            <input type="number" inputmode="numeric" class="si" id="akia-${m.id}" value="${sv.a??''}" oninput="autoSelectKOWinner('${m.id}')" onblur="fillEmptyAdmSide('akih-${m.id}','akia-${m.id}');autoSelectKOWinner('${m.id}')">
           </div>
           <span class="ko-team${!T2?' tbd':''}">${T2||'TBD'}</span>
         </div>
