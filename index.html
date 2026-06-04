@@ -356,7 +356,12 @@ input.si:read-only{opacity:.5;cursor:default}
       <div id="save-grp-status" style="margin-top:12px"></div>
     </div>
     <div id="stab-ko" style="display:none">
-      <div class="alert alert-info" style="margin-bottom:16px">Enter actual knockout results here. Teams populate from official group results above.</div>
+      <div class="alert alert-info" style="margin-bottom:16px">
+        ⚽ <strong>How to use:</strong> Enter and save all 72 group scores in <strong>Group Results</strong> first — then come here. Enter R32 scores + winners → <strong>Save</strong> → R16 teams populate. Repeat each round.
+      </div>
+      <div id="ko-grp-warning" style="display:none;background:#c0392b;color:#fff;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:.88rem;font-weight:600">
+        ⚠️ Group scores not fully entered — KO bracket teams may be wrong. Enter all 72 group scores in <strong>Group Results</strong> tab first.
+      </div>
       <div id="adm-ko-area"></div>
       <div class="btn-row"><button class="btn btn-gold" onclick="saveKoResults()">💾 Save Knockout Results</button></div>
       <div id="save-ko-status" style="margin-top:12px"></div>
