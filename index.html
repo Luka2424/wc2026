@@ -1598,6 +1598,20 @@ async function saveGroupResults(){
 }
 
 // Admin knockout results
+function autoSelectKOWinner(mid){
+  var h = parseInt(document.getElementById('akih-'+mid)?.value);
+  var a = parseInt(document.getElementById('akia-'+mid)?.value);
+  var sel = document.getElementById('akiw-'+mid);
+  if(!sel) return;
+  if(isNaN(h) || isNaN(a)) return; // don't change if either score is empty
+  if(h === a) return; // draw — can't auto-select, let admin choose (extra time/pens)
+  // Get the two team options
+  var opts = Array.from(sel.options).filter(function(o){ return o.value; });
+  if(opts.length !== 2) return;
+  // Home team is always opts[0], away is opts[1]
+  sel.value = h > a ? opts[0].value : opts[1].value;
+}
+
 function buildAdmKOGrid(){
   const c = document.getElementById('adm-ko-area');
   if(!c) return;
@@ -1633,9 +1647,9 @@ function buildAdmKOGrid(){
         <div class="ko-matchup">
           <span class="ko-team home${!T1?' tbd':''}">${T1||'TBD'}</span>
           <div class="score-wrap">
-            <input type="number" inputmode="numeric" class="si" id="akih-${m.id}" value="${sv.h??''}">
+            <input type="number" inputmode="numeric" class="si" id="akih-${m.id}" value="${sv.h??''}" oninput="autoSelectKOWinner('${m.id}')">
             <span class="sc-sep">:</span>
-            <input type="number" inputmode="numeric" class="si" id="akia-${m.id}" value="${sv.a??''}">
+            <input type="number" inputmode="numeric" class="si" id="akia-${m.id}" value="${sv.a??''}" oninput="autoSelectKOWinner('${m.id}')">
           </div>
           <span class="ko-team${!T2?' tbd':''}">${T2||'TBD'}</span>
         </div>
