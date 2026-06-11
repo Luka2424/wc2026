@@ -231,6 +231,9 @@ input.si:read-only{opacity:.5;cursor:default}
 <!-- PICKS -->
 <div class="page" id="page-picks">
 <div class="wrap">
+  <div id="returning-msg" style="display:none;background:#1a472a;color:#a8e6cf;padding:14px 20px;border-radius:10px;margin-bottom:16px;font-weight:600;font-size:.95rem;text-align:center;border:1px solid #2ecc71">
+    ✅ Welcome back! Your group stage picks have been loaded. Go through to the bracket step and update your KO picks, then resubmit.
+  </div>
   <div id="picks-locked-banner" style="display:none;background:#c0392b;color:#fff;padding:14px 20px;border-radius:10px;margin-bottom:16px;font-weight:600;font-size:.95rem;text-align:center">
     🔒 Picks are locked — the tournament has started. You can view your picks but cannot submit changes.
   </div>
@@ -377,6 +380,7 @@ input.si:read-only{opacity:.5;cursor:default}
         <div class="card-title">💾 Data</div>
         <div style="display:flex;flex-direction:column;gap:10px;max-width:360px">
           <button class="btn btn-ghost" onclick="exportJSON()">📥 Export backup JSON</button>
+          <button class="btn btn-ghost" onclick="wipeKOPicks()" style="border-color:#e67e22;color:#e67e22">🔄 Wipe KO Picks (keep group scores)</button>
           <button class="btn btn-ghost" onclick="importJSON()" style="border-color:#3498db;color:#3498db">📤 Import backup JSON</button>
           <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="handleImport(this)">
           <button class="btn btn-ghost" onclick="showSettingsTab()">⚙️ Pool Settings</button>
@@ -1072,6 +1076,23 @@ function nextStep(n){
   if(n===1){
     const name = document.getElementById('pick-name')?.value?.trim();
     if(!name || name.length<2){ alert('Please enter your name first'); return; }
+    // Pre-fill picks if this person already submitted
+    const existing = POOL.participants.find(p => p.name.toLowerCase() === name.toLowerCase());
+    if(existing && existing.picks){
+      PS.gs  = JSON.parse(JSON.stringify(existing.picks.groupScores || {}));
+      PS.koW = JSON.parse(JSON.stringify(existing.picks.knockout ?
+        Object.fromEntries(Object.entries(existing.picks.knockout).map(([k,v])=>[k,v.winner])) : {}));
+      PS.koS = JSON.parse(JSON.stringify(existing.picks.knockout ?
+        Object.fromEntries(Object.entries(existing.picks.knockout).map(([k,v])=>[k,{h:v.h,a:v.a}])) : {}));
+      // Restore Final loser
+      if(existing.picks.knockout?.m104?.loser) PS.koW['m104_L'] = existing.picks.knockout.m104.loser;
+      // Show welcome back message
+      const msg = document.getElementById('returning-msg');
+      if(msg) msg.style.display = 'block';
+    } else {
+      const msg = document.getElementById('returning-msg');
+      if(msg) msg.style.display = 'none';
+    }
   }
   if(n===2) renderStandingsPreview();
   if(n===3) renderBracket();
@@ -1770,6 +1791,21 @@ async function doSync(){
     renderParticipants();
   } catch(e){ alert('Sync failed: '+e.message); }
   if(sp) sp.style.display = 'none';
+}
+
+function wipeKOPicks(){
+  if(!confirm('Wipe KO bracket picks from ALL participants?\n\nThis keeps everyone\'s group stage scores intact but clears their knockout picks so they can redo the bracket.\n\nThis cannot be undone.')) return;
+  let count = 0;
+  POOL.participants.forEach(function(p){
+    if(p.picks && p.picks.knockout && Object.keys(p.picks.knockout).length > 0){
+      p.picks.knockout = {};
+      count++;
+    }
+  });
+  cloudSave().then(function(){
+    alert('✅ Done! KO picks wiped for ' + count + ' participant(s).\n\nAsk everyone to visit the site, enter their name, and redo their bracket. Their group picks are all still there.');
+    renderParticipants();
+  }).catch(function(e){ alert('Error: ' + e.message); });
 }
 
 function importJSON(){
