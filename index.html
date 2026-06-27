@@ -1086,10 +1086,14 @@ function nextStep(n){
         Object.fromEntries(Object.entries(existing.picks.knockout).map(([k,v])=>[k,{h:v.h,a:v.a}])) : {}));
       // Restore Final loser
       if(existing.picks.knockout?.m104?.loser) PS.koW['m104_L'] = existing.picks.knockout.m104.loser;
+      // Rebuild inputs NOW so pre-filled values show immediately
+      buildGroupMatchInputs();
       // Show welcome back message
       const msg = document.getElementById('returning-msg');
       if(msg) msg.style.display = 'block';
     } else {
+      PS = emptyPS(); // clear any leftover picks
+      buildGroupMatchInputs();
       const msg = document.getElementById('returning-msg');
       if(msg) msg.style.display = 'none';
     }
